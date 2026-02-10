@@ -1,0 +1,6 @@
+@mi_tension_backend_HostAddress = http://localhost:5129
+
+GET {{mi_tension_backend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
