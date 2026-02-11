@@ -1,3 +1,4 @@
 appsettings.json
 
 appsettings.Development.json
+# Ignorar archivo con secretos
