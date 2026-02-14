@@ -1,4 +1,69 @@
-appsettings.json
+﻿# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
 
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options directory
+.vs/
+
+# Visual Studio Code
+.vscode/
+
+# Rider
+.idea/
+
+# Files containing sensitive data
+appsettings.json
 appsettings.Development.json
-# Ignorar archivo con secretos
+appsettings.Production.json
+appsettings.*.json
+!appsettings.example.json
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# User secrets
+secrets.json
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+**/packages/*
+*.nuget.props
+*.nuget.targets
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# macOS
+.DS_Store
+
+# Scripts personales
+reorganizar-ramas.ps1
+reorganizar-ramas-fixed.ps1
+actualizar-gitignore.ps1
+mi_script.ps1
