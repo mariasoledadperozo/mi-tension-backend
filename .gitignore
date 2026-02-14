@@ -5,8 +5,8 @@
 *.userosscache
 *.sln.docstates
 
-# User-specific files (MonoDevelop/Xamarin Studio)
-*.userprefs
+# Visual Studio cache/options directory
+.vs/
 
 # Build results
 [Dd]ebug/
@@ -23,15 +23,6 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
-
-# Visual Studio cache/options directory
-.vs/
-
-# Visual Studio Code
-.vscode/
-
-# Rider
-.idea/
 
 # Files containing sensitive data
 appsettings.json
@@ -55,7 +46,7 @@ secrets.json
 *.nuget.props
 *.nuget.targets
 
-# Windows image file caches
+# Windows
 Thumbs.db
 ehthumbs.db
 
@@ -66,4 +57,6 @@ ehthumbs.db
 reorganizar-ramas.ps1
 reorganizar-ramas-fixed.ps1
 actualizar-gitignore.ps1
+actualizar-gitignore-todas-ramas.ps1
+organizar-dtos.ps1
 mi_script.ps1
