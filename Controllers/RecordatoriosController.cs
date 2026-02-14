@@ -6,53 +6,52 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using mi_tension_backend.Models;
-using mi_tension_backend.Context; 
-
+using mi_tension_backend.Data;        
 namespace mi_tension_backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class RecordatoriosController : ControllerBase
     {
-        private readonly MiDbContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public RecordatoriosController(MiDbContext context)
+        public RecordatoriosController(ApplicationDbContext context)
         {
             _context = context;
         }
 
         // GET: api/Recordatorios
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Recordatorios>>> GetRecordatorios()
+        public async Task<ActionResult<IEnumerable<Recordatorio>>> GetRecordatorio()
         {
-            return await _context.Recordatorios.ToListAsync();
+            return await _context.Recordatorio.ToListAsync();
         }
 
         // GET: api/Recordatorios/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Recordatorios>> GetRecordatorios(int id)
+        public async Task<ActionResult<Recordatorio>> GetRecordatorio(int id)
         {
-            var recordatorios = await _context.Recordatorios.FindAsync(id);
+            var recordatorio = await _context.Recordatorio.FindAsync(id);
 
-            if (recordatorios == null)
+            if (recordatorio == null)
             {
                 return NotFound();
             }
 
-            return recordatorios;
+            return recordatorio;
         }
 
         // PUT: api/Recordatorios/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutRecordatorios(int id, Recordatorios recordatorios)
+        public async Task<IActionResult> PutRecordatorio(int id, Recordatorio recordatorio)
         {
-            if (id != recordatorios.id)
+            if (id != recordatorio.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(recordatorios).State = EntityState.Modified;
+            _context.Entry(recordatorio).State = EntityState.Modified;
 
             try
             {
@@ -60,7 +59,7 @@ namespace mi_tension_backend.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!RecordatoriosExists(id))
+                if (!RecordatorioExists(id))
                 {
                     return NotFound();
                 }
@@ -76,33 +75,33 @@ namespace mi_tension_backend.Controllers
         // POST: api/Recordatorios
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Recordatorios>> PostRecordatorios(Recordatorios recordatorios)
+        public async Task<ActionResult<Recordatorio>> PostRecordatorio(Recordatorio recordatorio)
         {
-            _context.Recordatorios.Add(recordatorios);
+            _context.Recordatorio.Add(recordatorio);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetRecordatorios", new { id = recordatorios.id }, recordatorios);
+            return CreatedAtAction("GetRecordatorio", new { id = recordatorio.Id }, recordatorio);
         }
 
         // DELETE: api/Recordatorios/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteRecordatorios(int id)
+        public async Task<IActionResult> DeleteRecordatorio(int id)
         {
-            var recordatorios = await _context.Recordatorios.FindAsync(id);
-            if (recordatorios == null)
+            var recordatorio = await _context.Recordatorio.FindAsync(id);
+            if (recordatorio == null)
             {
                 return NotFound();
             }
 
-            _context.Recordatorios.Remove(recordatorios);
+            _context.Recordatorio.Remove(recordatorio);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool RecordatoriosExists(int id)
+        private bool RecordatorioExists(int id)
         {
-            return _context.Recordatorios.Any(e => e.id == id);
+            return _context.Recordatorio.Any(e => e.Id == id);
         }
     }
 }

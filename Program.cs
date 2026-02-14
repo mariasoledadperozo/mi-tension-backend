@@ -1,38 +1,36 @@
-using mi_tension_backend.Context;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using mi_tension_backend.Models;
+using mi_tension_backend.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configuración de la Base de Datos (PostgreSQL - Supabase)
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-builder.Services.AddDbContext<MiDbContext>(options =>
-    options.UseNpgsql(connectionString)
-);
-
-// 2. Registro de servicios básicos
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
+// Add services to the container.
+builder.Services.AddControllers();  
+builder.Services.AddEndpointsApiExplorer();  
 builder.Services.AddSwaggerGen();
 
-var app = builder.Build();
+// CONEXION A SUPABASE - Usando PostgreSQL
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 3. Configuración del Pipeline de HTTP (Swagger y Rutas)
-// Esto es lo que hace que Swagger funcione al abrir el navegador
-if (app.Environment.IsDevelopment())
+// Configurar Identity
+builder.Services.AddIdentity<Usuario, IdentityRole>()  
+    .AddEntityFrameworkStores<ApplicationDbContext>()  
+    .AddDefaultTokenProviders();  
+
+var app = builder.Build();  
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())  
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mi Tension API V1");
-        // Deja el RoutePrefix vacío para que Swagger cargue en la raíz (http://localhost:XXXX/)
-        c.RoutePrefix = string.Empty;
-    });
+    app.UseSwagger(); 
+    app.UseSwaggerUI();  
 }
 
-// Middlewares necesarios para seguridad y mapeo de rutas
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
