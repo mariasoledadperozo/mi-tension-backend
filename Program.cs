@@ -6,27 +6,28 @@ using mi_tension_backend.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers();  
-builder.Services.AddEndpointsApiExplorer();  
-builder.Services.AddSwaggerGen();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
 
-// CONEXION A SUPABASE - Usando PostgreSQL
+builder.Services.AddSwaggerGen(options =>
+{
+    options.CustomSchemaIds(type => type.FullName);
+    options.SupportNonNullableReferenceTypes();
+});
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Configurar Identity
-builder.Services.AddIdentity<Usuario, IdentityRole>()  
-    .AddEntityFrameworkStores<ApplicationDbContext>()  
-    .AddDefaultTokenProviders();  
+builder.Services.AddIdentity<Usuario, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
 
-var app = builder.Build();  
+var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())  
+if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger(); 
-    app.UseSwaggerUI();  
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

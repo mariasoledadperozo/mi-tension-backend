@@ -25,7 +25,7 @@ namespace mi_tension_backend.Models
         public int Diastolica { get; set; }
 
         [Range(30, 220, ErrorMessage = "El pulso debe estar entre 30 y 220 lpm")]
-        public int? Pulso { get; set; }
+        public int Pulso { get; set; }
 
         [Required]
         public DateTime Fecha { get; set; } = DateTime.UtcNow;

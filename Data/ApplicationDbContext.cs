@@ -12,12 +12,9 @@ namespace mi_tension_backend.Data
         {
         }
 
-        // DbSets en singular para coincidir con tus controladores
+        public DbSet<Usuario> Usuario { get; set; }
         public DbSet<Recordatorio> Recordatorio { get; set; } = default!;
         public DbSet<RegistroPresion> RegistroPresion { get; set; } = default!;
-
-        // Agregar esta línea para acceder a Usuarios
-        public DbSet<Usuario> Usuario => Set<Usuario>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

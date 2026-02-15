@@ -1,6 +1,7 @@
 ﻿using mi_tension_backend.Enums;
 using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace mi_tension_backend.Models
 {
@@ -34,9 +35,10 @@ namespace mi_tension_backend.Models
         /**   RELACIONES          **/
         /***************************/
 
+        [JsonIgnore]
         public virtual ICollection<RegistroPresion> RegistrosPresion { get; set; }
             = new List<RegistroPresion>();
-
+        [JsonIgnore]
         public virtual ICollection<Recordatorio> Recordatorios { get; set; }
             = new List<Recordatorio>();
     }
