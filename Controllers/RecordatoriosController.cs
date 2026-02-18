@@ -3,11 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using mi_tension_backend.Data;
 using mi_tension_backend.Models;
 using mi_tension_backend.DTOs.Recordatorio;
+using Microsoft.AspNetCore.Authorization;
 
 namespace mi_tension_backend.Controllers
 {
+
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class RecordatoriosController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

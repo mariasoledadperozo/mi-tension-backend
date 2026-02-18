@@ -4,12 +4,14 @@ using mi_tension_backend.Data;
 using mi_tension_backend.Models;
 using mi_tension_backend.DTOs;
 using mi_tension_backend.DTOs.Usuario;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace mi_tension_backend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UsuariosController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
