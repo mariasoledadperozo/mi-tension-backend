@@ -1,15 +1,45 @@
-﻿public class Usuario
-{
-    public Guid Id { get; set; }
-    public string Nombre { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string Clave { get; set; } = string.Empty;
-    public DateTime FechaNacimiento { get; set; }
-    public string Sexo { get; set; } = string.Empty; 
-    public bool EsFumador { get; set; }
-    public bool TomaMedicacion { get; set; }
-    public double? Altura { get; set; } 
-    public double? Peso { get; set; }  
+﻿using mi_tension_backend.Enums;
+using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
-    public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+namespace mi_tension_backend.Models
+{
+    /// <summary>
+    /// Clase Usuario que representa a un usuario en el sistema.
+    /// Hereda de IdentityUser para autenticación y gestión de usuarios.
+    /// </summary>
+    public class Usuario : IdentityUser
+    {
+        /***************************/
+        /**   DATOS DE USUARIO    **/
+        /***************************/
+
+        [Required]
+        [MaxLength(100)]
+        public string Nombre { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(100)]
+        public string Apellidos { get; set; } = string.Empty;
+
+        [Required]
+        public DateOnly FechaNacimiento { get; set; }
+
+        [Required]
+        public Sexo Sexo { get; set; }
+
+        public bool? TomaMedicacion { get; set; }
+
+        /***************************/
+        /**   RELACIONES          **/
+        /***************************/
+
+        [JsonIgnore]
+        public virtual ICollection<RegistroPresion> RegistrosPresion { get; set; }
+            = new List<RegistroPresion>();
+        [JsonIgnore]
+        public virtual ICollection<Recordatorio> Recordatorios { get; set; }
+            = new List<Recordatorio>();
+    }
 }
