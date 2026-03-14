@@ -1,3 +1,4 @@
+// Author: María Soledad Perozo
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using mi_tension_backend.Data;
@@ -7,7 +8,9 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace mi_tension_backend.Controllers
 {
-
+    /// <summary>
+    /// Controlador para la gestión de recordatorios de medicación.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -20,7 +23,10 @@ namespace mi_tension_backend.Controllers
             _context = context;
         }
 
-        // GET: api/Recordatorios
+        /// <summary>
+        /// Obtiene la lista completa de recordatorios.
+        /// </summary>
+        /// <returns>Lista de recordatorios.</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RecordatorioResponseDto>>> GetRecordatorio()
         {
@@ -41,7 +47,11 @@ namespace mi_tension_backend.Controllers
             return Ok(response);
         }
 
-        // GET: api/Recordatorios/5
+        /// <summary>
+        /// Obtiene un recordatorio específico por su ID.
+        /// </summary>
+        /// <param name="id">ID del recordatorio.</param>
+        /// <returns>Detalles del recordatorio.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<RecordatorioResponseDto>> GetRecordatorio(int id)
         {
@@ -67,7 +77,11 @@ namespace mi_tension_backend.Controllers
             return Ok(response);
         }
 
-        // GET: api/Recordatorios/usuario/{usuarioId}
+        /// <summary>
+        /// Obtiene todos los recordatorios asociados a un usuario específico.
+        /// </summary>
+        /// <param name="usuarioId">ID del usuario.</param>
+        /// <returns>Lista de recordatorios del usuario.</returns>
         [HttpGet("usuario/{usuarioId}")]
         public async Task<ActionResult<IEnumerable<RecordatorioResponseDto>>> GetRecordatoriosPorUsuario(string usuarioId)
         {
@@ -91,7 +105,12 @@ namespace mi_tension_backend.Controllers
             return Ok(response);
         }
 
-        // PUT: api/Recordatorios/5
+        /// <summary>
+        /// Actualiza un recordatorio existente.
+        /// </summary>
+        /// <param name="id">ID del recordatorio a actualizar.</param>
+        /// <param name="updateDto">Nuevos datos del recordatorio.</param>
+        /// <returns>Resultado de la operación.</returns>
         [HttpPut("{id}")]
         public async Task<IActionResult> PutRecordatorio(int id, UpdateRecordatorioDto updateDto)
         {
@@ -102,7 +121,6 @@ namespace mi_tension_backend.Controllers
                 return NotFound();
             }
 
-            // Actualizar campos
             recordatorio.NombreMedicina = updateDto.NombreMedicina;
             recordatorio.Dosis = updateDto.Dosis;
             recordatorio.Hora = updateDto.Hora;
@@ -128,11 +146,14 @@ namespace mi_tension_backend.Controllers
             return NoContent();
         }
 
-        // POST: api/Recordatorios
+        /// <summary>
+        /// Crea un nuevo recordatorio de medicación.
+        /// </summary>
+        /// <param name="createDto">Datos del nuevo recordatorio.</param>
+        /// <returns>El recordatorio creado.</returns>
         [HttpPost]
         public async Task<ActionResult<RecordatorioResponseDto>> PostRecordatorio(CreateRecordatorioDto createDto)
         {
-            // Verificar que el usuario existe
             var usuarioExists = await _context.Usuario.AnyAsync(u => u.Id == createDto.UsuarioId);
             if (!usuarioExists)
             {
@@ -168,7 +189,11 @@ namespace mi_tension_backend.Controllers
             return CreatedAtAction("GetRecordatorio", new { id = recordatorio.Id }, response);
         }
 
-        // PUT: api/Recordatorios/5/toggle
+        /// <summary>
+        /// Alterna el estado activo/inactivo de un recordatorio.
+        /// </summary>
+        /// <param name="id">ID del recordatorio.</param>
+        /// <returns>Resultado de la operación.</returns>
         [HttpPut("{id}/toggle")]
         public async Task<IActionResult> ToggleRecordatorio(int id)
         {
@@ -185,7 +210,11 @@ namespace mi_tension_backend.Controllers
             return NoContent();
         }
 
-        // DELETE: api/Recordatorios/5
+        /// <summary>
+        /// Elimina un recordatorio del sistema.
+        /// </summary>
+        /// <param name="id">ID del recordatorio a eliminar.</param>
+        /// <returns>Resultado de la operación.</returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRecordatorio(int id)
         {

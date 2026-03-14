@@ -1,8 +1,12 @@
+// Author: María Soledad Perozo
 using System.ComponentModel.DataAnnotations;
 using mi_tension_backend.Enums;
 
 namespace mi_tension_backend.DTOs.Recordatorio
 {
+    /// <summary>
+    /// DTO para la creación de un nuevo recordatorio de medicación.
+    /// </summary>
     public class CreateRecordatorioDto
     {
         [Required(ErrorMessage = "El ID del usuario es obligatorio")]

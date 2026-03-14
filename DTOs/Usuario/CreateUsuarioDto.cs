@@ -1,8 +1,15 @@
+// Author: María Soledad Perozo
 using System.ComponentModel.DataAnnotations;
+
+using mi_tension_backend.Attributes;
 using mi_tension_backend.Enums;
+
 
 namespace mi_tension_backend.DTOs.Usuario
 {
+    /// <summary>
+    /// DTO para la creación de un nuevo usuario con credenciales de acceso.
+    /// </summary>
     public class CreateUsuarioDto
     {
         [Required(ErrorMessage = "El email es obligatorio")]
@@ -22,10 +29,12 @@ namespace mi_tension_backend.DTOs.Usuario
         public required string Apellidos { get; set; }
 
         [Required(ErrorMessage = "La fecha de nacimiento es obligatoria")]
+        [NoFutureDate(ErrorMessage = "La fecha de nacimiento no puede ser futura")]
         public required DateOnly FechaNacimiento { get; set; }
 
         [Required(ErrorMessage = "El sexo es obligatorio")]
         public required Sexo Sexo { get; set; }
+
 
         public bool? TomaMedicacion { get; set; }
 

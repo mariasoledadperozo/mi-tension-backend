@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
@@ -13,6 +15,9 @@ using mi_tension_backend.DTOs;
 
 namespace mi_tension_backend.Controllers
 {
+    /// <summary>
+    /// Controlador encargado de la autenticación y gestión de usuarios.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
@@ -34,7 +39,11 @@ namespace mi_tension_backend.Controllers
             _configuration = configuration;
         }
 
-        // ── REGISTRO ─────────────────────────────────────────────
+        /// <summary>
+        /// Registra un nuevo usuario en el sistema y envía un correo de confirmación.
+        /// </summary>
+        /// <param name="dto">Datos del usuario a registrar.</param>
+        /// <returns>Resultado de la operación de registro.</returns>
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegistroUsuarioDto dto)
         {
@@ -60,34 +69,76 @@ namespace mi_tension_backend.Controllers
             if (!resultado.Succeeded)
                 return BadRequest(new { errores = resultado.Errors.Select(e => e.Description) });
 
-            // Generar token de confirmación
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(usuario);
-            var tokenCodificado = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            // Generar código de 6 dígitos
+            var random = new Random();
+            var codigo = random.Next(100000, 999999).ToString();
+            
+            usuario.CodigoVerificacion = codigo;
+            usuario.CodigoVerificacionExpiracion = DateTime.UtcNow.AddMinutes(15);
+            await _userManager.UpdateAsync(usuario);
 
-            var urlConfirmacion = Url.Action(
-                "ConfirmarEmail", "Auth",
-                new { userId = usuario.Id, token = tokenCodificado },
-                Request.Scheme);
+            Console.WriteLine($"[AuthController] Usuario creado. Código de verificación generado: {codigo}");
 
-            var htmlBody = $@"
-                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
-                    <h2 style='color: #2c3e50;'>¡Bienvenida a Mi Tensión!</h2>
-                    <p>Hola <strong>{usuario.Nombre}</strong>, confirma tu cuenta haciendo clic en el botón:</p>
-                    <a href='{HtmlEncoder.Default.Encode(urlConfirmacion!)}' 
-                       style='display:inline-block; padding:12px 24px; background:#3498db; 
-                              color:white; text-decoration:none; border-radius:6px; margin:16px 0;'>
-                        Verificar correo
-                    </a>
-                    <p style='color:#7f8c8d; font-size:13px;'>Este enlace expira en 24 horas.<br>
-                    Si no creaste esta cuenta, ignora este mensaje.</p>
-                </div>";
+            var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ConfirmEmailTemplate.html");
+            var htmlBody = await System.IO.File.ReadAllTextAsync(templatePath);    
 
-            await _emailService.SendEmailAsync(dto.Email, "Confirma tu cuenta en Mi Tensión", htmlBody);
+            htmlBody = htmlBody.Replace("{{NOMBRE}}", usuario.Nombre);
+            htmlBody = htmlBody.Replace("{{CODIGO}}", codigo);
 
-            return Ok(new { mensaje = "Registro exitoso. Revisa tu correo para confirmar tu cuenta." });
+            Console.WriteLine("[AuthController] Template leído. Enviando email con código...");
+
+            try
+            {
+                await _emailService.SendEmailAsync(dto.Email, "Tu código de verificación - Mi Tensión", htmlBody);
+                Console.WriteLine("[AuthController] Email enviado correctamente.");
+            }
+            catch (Exception emailEx)
+            {
+                Console.WriteLine($"[AuthController] ERROR al enviar email: {emailEx.Message}");
+            }
+
+            return Ok(new { 
+                mensaje = "Registro exitoso. Revisa tu correo para obtener el código de verificación.",
+                email = dto.Email 
+            });
         }
 
-        // ── CONFIRMAR EMAIL ───────────────────────────────────────
+        /// <summary>
+        /// Verifica el código de 6 dígitos enviado al correo del usuario.
+        /// </summary>
+        [HttpPost("verificar-codigo")]
+        public async Task<IActionResult> VerificarCodigo([FromBody] VerificarCodigoDto dto)
+        {
+            var usuario = await _userManager.FindByEmailAsync(dto.Email);
+            if (usuario == null)
+                return NotFound(new { mensaje = "Usuario no encontrado." });
+
+            if (usuario.EmailConfirmed)
+                return BadRequest(new { mensaje = "El correo ya ha sido confirmado." });
+
+            if (usuario.CodigoVerificacion != dto.Codigo)
+                return BadRequest(new { mensaje = "El código es incorrecto." });
+
+            if (usuario.CodigoVerificacionExpiracion < DateTime.UtcNow)
+                return BadRequest(new { mensaje = "El código ha expirado. Solicita uno nuevo." });
+
+            usuario.EmailConfirmed = true;
+            usuario.CodigoVerificacion = null;
+            usuario.CodigoVerificacionExpiracion = null;
+
+            var resultado = await _userManager.UpdateAsync(usuario);
+            if (!resultado.Succeeded)
+                return BadRequest(new { errores = resultado.Errors.Select(e => e.Description) });
+
+            return Ok(new { mensaje = "Correo verificado exitosamente. Ya puedes iniciar sesión." });
+        }
+
+        /// <summary>
+        /// Confirma el correo electrónico de un usuario mediante un token.
+        /// </summary>
+        /// <param name="userId">ID del usuario.</param>
+        /// <param name="token">Token de confirmación.</param>
+        /// <returns>Resultado de la confirmación.</returns>
         [HttpGet("confirm-email")]
         public async Task<IActionResult> ConfirmarEmail(string userId, string token)
         {
@@ -110,7 +161,11 @@ namespace mi_tension_backend.Controllers
             return Ok(new { mensaje = "¡Correo verificado! Ya puedes iniciar sesión." });
         }
 
-        // ── LOGIN ─────────────────────────────────────────────────
+        /// <summary>
+        /// Inicia sesión de un usuario y devuelve un token JWT.
+        /// </summary>
+        /// <param name="dto">Credenciales de inicio de sesión.</param>
+        /// <returns>Token JWT e información resumida del usuario.</returns>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] IniciarSesionDto dto)
         {
@@ -146,13 +201,16 @@ namespace mi_tension_backend.Controllers
             });
         }
 
-        // ── REENVIAR CONFIRMACIÓN ─────────────────────────────────
+        /// <summary>
+        /// Reenvía el enlace de confirmación de correo a un usuario.
+        /// </summary>
+        /// <param name="email">Correo electrónico del usuario.</param>
+        /// <returns>Mensaje genérico de confirmación.</returns>
         [HttpPost("resend-confirmation")]
         public async Task<IActionResult> ReenviarConfirmacion([FromBody] string email)
         {
             var usuario = await _userManager.FindByEmailAsync(email);
 
-            // Respuesta genérica por seguridad (no revela si el email existe)
             if (usuario == null || usuario.EmailConfirmed)
                 return Ok(new { mensaje = "Si el correo existe y no está confirmado, recibirás un nuevo enlace." });
 
@@ -164,23 +222,22 @@ namespace mi_tension_backend.Controllers
                 new { userId = usuario.Id, token = tokenCodificado },
                 Request.Scheme);
 
-            var htmlBody = $@"
-                <div style='font-family: Arial, sans-serif; max-width: 600px;'>
-                    <h2>Nuevo enlace de verificación</h2>
-                    <p>Hola <strong>{usuario.Nombre}</strong>, aquí tienes un nuevo enlace:</p>
-                    <a href='{HtmlEncoder.Default.Encode(urlConfirmacion!)}' 
-                       style='display:inline-block; padding:12px 24px; background:#3498db; 
-                              color:white; text-decoration:none; border-radius:6px;'>
-                        Verificar correo
-                    </a>
-                </div>";
+            var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ConfirmEmailTemplate.html");
+            var htmlBody = await System.IO.File.ReadAllTextAsync(templatePath);    
+
+            htmlBody = htmlBody.Replace("{{NOMBRE}}", usuario.Nombre);
+            htmlBody = htmlBody.Replace("{{CONFIRM_URL}}", urlConfirmacion);
 
             await _emailService.SendEmailAsync(email, "Nuevo enlace de verificación - Mi Tensión", htmlBody);
 
             return Ok(new { mensaje = "Si el correo existe y no está confirmado, recibirás un nuevo enlace." });
         }
 
-        // ── GENERAR JWT ───────────────────────────────────────────
+        /// <summary>
+        /// Genera un token JWT para un usuario autenticado.
+        /// </summary>
+        /// <param name="usuario">Usuario para el que se genera el token.</param>
+        /// <returns>Token JWT en formato string.</returns>
         private string GenerarJwt(Usuario usuario)
         {
             var jwtSettings = _configuration.GetSection("Jwt");

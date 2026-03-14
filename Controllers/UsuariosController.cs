@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// Author: María Soledad Perozo
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using mi_tension_backend.Data;
 using mi_tension_backend.Models;
@@ -6,9 +7,11 @@ using mi_tension_backend.DTOs;
 using mi_tension_backend.DTOs.Usuario;
 using Microsoft.AspNetCore.Authorization;
 
-
 namespace mi_tension_backend.Controllers
 {
+    /// <summary>
+    /// Controlador para la gestión de datos maestros de usuarios.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -21,9 +24,10 @@ namespace mi_tension_backend.Controllers
             _context = context;
         }
 
-        // ===============================
-        // GET: api/Usuarios
-        // ===============================
+        /// <summary>
+        /// Obtiene la lista completa de usuarios registrados.
+        /// </summary>
+        /// <returns>Lista de usuarios.</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UsuarioResponseDto>>> GetUsuarios()
         {
@@ -43,9 +47,11 @@ namespace mi_tension_backend.Controllers
             return Ok(response);
         }
 
-        // ===============================
-        // GET: api/Usuarios/{id}
-        // ===============================
+        /// <summary>
+        /// Obtiene la información detallada de un usuario por su ID.
+        /// </summary>
+        /// <param name="id">ID del usuario.</param>
+        /// <returns>Datos del usuario.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<UsuarioResponseDto>> GetUsuario(string id)
         {
@@ -66,13 +72,14 @@ namespace mi_tension_backend.Controllers
             return Ok(response);
         }
 
-        // ===============================
-        // POST: api/Usuarios
-        // ===============================
+        /// <summary>
+        /// Crea un nuevo usuario de forma manual (sin flujo de Identity).
+        /// </summary>
+        /// <param name="registroDto">Datos del usuario.</param>
+        /// <returns>El usuario creado.</returns>
         [HttpPost]
         public async Task<ActionResult<UsuarioResponseDto>> PostUsuario([FromBody] RegistroUsuarioDto registroDto)
         {
-            // Verificar si el email ya existe
             if (_context.Usuario.Any(u => u.Email == registroDto.Email))
             {
                 return BadRequest(new { message = "El email ya está registrado" });
@@ -88,7 +95,6 @@ namespace mi_tension_backend.Controllers
                 TomaMedicacion = registroDto.TomaMedicacion
             };
 
-            // Generar un Id manual si no usas Identity
             usuario.Id = Guid.NewGuid().ToString();
 
             _context.Usuario.Add(usuario);
@@ -108,9 +114,12 @@ namespace mi_tension_backend.Controllers
             return CreatedAtAction(nameof(GetUsuario), new { id = usuario.Id }, response);
         }
 
-        // ===============================
-        // PUT: api/Usuarios/{id}
-        // ===============================
+        /// <summary>
+        /// Actualiza la información personal de un usuario.
+        /// </summary>
+        /// <param name="id">ID del usuario.</param>
+        /// <param name="updateDto">Nuevos datos personales.</param>
+        /// <returns>Resultado de la operación.</returns>
         [HttpPut("{id}")]
         public async Task<IActionResult> PutUsuario(string id, [FromBody] RegistroUsuarioDto updateDto)
         {
@@ -127,9 +136,11 @@ namespace mi_tension_backend.Controllers
             return NoContent();
         }
 
-        // ===============================
-        // DELETE: api/Usuarios/{id}
-        // ===============================
+        /// <summary>
+        /// Elimina un usuario y todos sus datos asociados.
+        /// </summary>
+        /// <param name="id">ID del usuario a eliminar.</param>
+        /// <returns>Resultado de la operación.</returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUsuario(string id)
         {

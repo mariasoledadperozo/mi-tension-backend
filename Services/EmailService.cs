@@ -1,19 +1,12 @@
-using System.Net;
-using System.Net.Mail;
+// Author: María Soledad Perozo
+using SendGrid;
+using SendGrid.Helpers.Mail;
 using Microsoft.Extensions.Options;
-using mi_tension_backend.Models;
+using System.Threading.Tasks;
+using System.Net;
 
 namespace mi_tension_backend.Services
 {
-    public class EmailSettings
-    {
-        public string Host { get; set; } = string.Empty;
-        public int Port { get; set; }
-        public bool UseSsl { get; set; }
-        public string Username { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-    }
-
     public interface IEmailService
     {
         Task SendEmailAsync(string to, string subject, string htmlBody);
@@ -21,31 +14,32 @@ namespace mi_tension_backend.Services
 
     public class EmailService : IEmailService
     {
-        private readonly EmailSettings _settings;
+        private readonly EmailSettings _emailSettings;
 
-        public EmailService(IOptions<EmailSettings> settings)
+        public EmailService(IOptions<EmailSettings> emailSettings)
         {
-            _settings = settings.Value;
+            _emailSettings = emailSettings.Value;
         }
 
         public async Task SendEmailAsync(string to, string subject, string htmlBody)
         {
-            using var client = new SmtpClient(_settings.Host, _settings.Port)
-            {
-                Credentials = new NetworkCredential(_settings.Username, _settings.Password),
-                EnableSsl = _settings.UseSsl
-            };
+            var client = new SendGridClient(_emailSettings.Password);
+            var from = new EmailAddress(_emailSettings.FromEmail, _emailSettings.FromName);
+            var toEmail = new EmailAddress(to);
+            var msg = MailHelper.CreateSingleEmail(from, toEmail, subject, plainTextContent: null, htmlContent: htmlBody);
 
-            var message = new MailMessage
-            {
-                From = new MailAddress(_settings.Username, "Mi Tensión"),
-                Subject = subject,
-                Body = htmlBody,
-                IsBodyHtml = true
-            };
+            var response = await client.SendEmailAsync(msg);
+            var responseBody = await response.Body.ReadAsStringAsync();
 
-            message.To.Add(to);
-            await client.SendMailAsync(message);
+            Console.WriteLine($"[SendGrid] Status: {response.StatusCode}");
+            Console.WriteLine($"[SendGrid] Body: {responseBody}");
+
+            if (response.StatusCode != HttpStatusCode.OK && response.StatusCode != HttpStatusCode.Accepted)
+            {
+                throw new Exception($"SendGrid error {response.StatusCode}: {responseBody}");
+            }
+
+            Console.WriteLine($"[EmailService] Correo enviado exitosamente a {to}");
         }
     }
 }

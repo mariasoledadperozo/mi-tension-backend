@@ -1,7 +1,11 @@
+// Author: María Soledad Perozo
 using mi_tension_backend.Enums;
 
 namespace mi_tension_backend.DTOs.Recordatorio
 {
+    /// <summary>
+    /// DTO de respuesta que contiene los detalles de un recordatorio.
+    /// </summary>
     public class RecordatorioResponseDto
     {
         public int Id { get; set; }

@@ -1,8 +1,12 @@
+// Author: María Soledad Perozo
 using System.ComponentModel.DataAnnotations;
 using mi_tension_backend.Enums;
 
 namespace mi_tension_backend.DTOs.Recordatorio
 {
+    /// <summary>
+    /// DTO para actualizar los datos de un recordatorio existente.
+    /// </summary>
     public class UpdateRecordatorioDto
     {
         [Required(ErrorMessage = "El nombre de la medicina es obligatorio")]

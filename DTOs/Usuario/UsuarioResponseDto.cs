@@ -1,7 +1,11 @@
+// Author: María Soledad Perozo
 using mi_tension_backend.Enums;
 
 namespace mi_tension_backend.DTOs.Usuario
 {
+    /// <summary>
+    /// DTO de respuesta con la información pública del usuario.
+    /// </summary>
     public class UsuarioResponseDto
     {
         public string Id { get; set; } = string.Empty;
@@ -10,7 +14,7 @@ namespace mi_tension_backend.DTOs.Usuario
         public string Apellidos { get; set; } = string.Empty;
         public DateOnly FechaNacimiento { get; set; }
         public Sexo Sexo { get; set; }
+
         public bool? TomaMedicacion { get; set; }
-        public string? PhoneNumber { get; set; }
     }
 }
