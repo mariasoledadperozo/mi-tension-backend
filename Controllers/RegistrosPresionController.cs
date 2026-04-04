@@ -6,6 +6,7 @@ using mi_tension_backend.Models;
 using mi_tension_backend.DTOs.RegistroPresion;
 using mi_tension_backend.Services;
 using Microsoft.AspNetCore.Authorization;
+
 namespace mi_tension_backend.Controllers
 {
     /// <summary>
@@ -18,6 +19,7 @@ namespace mi_tension_backend.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly AnalizadorPresionService _analizadorPresion;
+
         public RegistrosPresionController(
             ApplicationDbContext context,
             AnalizadorPresionService analizadorPresion)
@@ -25,6 +27,7 @@ namespace mi_tension_backend.Controllers
             _context = context;
             _analizadorPresion = analizadorPresion;
         }
+
         /// <summary>
         /// Obtiene todos los registros de presión almacenados.
         /// </summary>
@@ -34,13 +37,13 @@ namespace mi_tension_backend.Controllers
             var registros = await _context.RegistroPresion.ToListAsync();
             var response = registros.Select(r => new RegistroPresionResponseDto
             {
-                Id = r.Id,
-                UsuarioId = r.UsuarioId,
-                Sistolica = r.Sistolica,
+                Id         = r.Id,
+                UsuarioId  = r.UsuarioId,
+                Sistolica  = r.Sistolica,
                 Diastolica = r.Diastolica,
-                Pulso = r.Pulso,
-                Fecha = r.Fecha,
-                Notas = r.Notas
+                Pulso      = r.Pulso,
+                Fecha      = r.Fecha,
+                Notas      = r.Notas
             });
             return Ok(response);
         }
@@ -53,18 +56,17 @@ namespace mi_tension_backend.Controllers
         {
             var registro = await _context.RegistroPresion.FindAsync(id);
             if (registro == null)
-            {
                 return NotFound();
-            }
+
             var response = new RegistroPresionResponseDto
             {
-                Id = registro.Id,
-                UsuarioId = registro.UsuarioId,
-                Sistolica = registro.Sistolica,
+                Id         = registro.Id,
+                UsuarioId  = registro.UsuarioId,
+                Sistolica  = registro.Sistolica,
                 Diastolica = registro.Diastolica,
-                Pulso = registro.Pulso,
-                Fecha = registro.Fecha,
-                Notas = registro.Notas
+                Pulso      = registro.Pulso,
+                Fecha      = registro.Fecha,
+                Notas      = registro.Notas
             };
             return Ok(response);
         }
@@ -77,10 +79,13 @@ namespace mi_tension_backend.Controllers
         {
             var registro = await _context.RegistroPresion.FindAsync(id);
             if (registro == null)
-            {
                 return NotFound(new { mensaje = "Registro no encontrado" });
-            }
-            var analisis = _analizadorPresion.Analizar(registro);
+
+            var usuario = await _context.Usuario.FindAsync(registro.UsuarioId);
+            if (usuario == null)
+                return NotFound(new { mensaje = "Usuario del registro no encontrado" });
+
+            var analisis = _analizadorPresion.Analizar(registro, usuario);
             return Ok(analisis);
         }
 
@@ -94,15 +99,16 @@ namespace mi_tension_backend.Controllers
                 .Where(r => r.UsuarioId == usuarioId)
                 .OrderByDescending(r => r.Fecha)
                 .ToListAsync();
+
             var response = registros.Select(r => new RegistroPresionResponseDto
             {
-                Id = r.Id,
-                UsuarioId = r.UsuarioId,
-                Sistolica = r.Sistolica,
+                Id         = r.Id,
+                UsuarioId  = r.UsuarioId,
+                Sistolica  = r.Sistolica,
                 Diastolica = r.Diastolica,
-                Pulso = r.Pulso,
-                Fecha = r.Fecha,
-                Notas = r.Notas
+                Pulso      = r.Pulso,
+                Fecha      = r.Fecha,
+                Notas      = r.Notas
             });
             return Ok(response);
         }
@@ -115,17 +121,21 @@ namespace mi_tension_backend.Controllers
             string usuarioId,
             [FromQuery] int? dias = 30)
         {
+            var usuario = await _context.Usuario.FindAsync(usuarioId);
+            if (usuario == null)
+                return NotFound(new { mensaje = "Usuario no encontrado" });
+
             var fechaLimite = DateTime.UtcNow.AddDays(-(dias ?? 30));
 
             var registros = await _context.RegistroPresion
                 .Where(r => r.UsuarioId == usuarioId && r.Fecha >= fechaLimite)
                 .OrderBy(r => r.Fecha)
                 .ToListAsync();
+
             if (!registros.Any())
-            {
                 return Ok(new EstadisticasPresion());
-            }
-            var estadisticas = _analizadorPresion.ObtenerEstadisticas(registros);
+
+            var estadisticas = _analizadorPresion.ObtenerEstadisticas(registros, usuario);
             return Ok(estadisticas);
         }
 
@@ -137,11 +147,16 @@ namespace mi_tension_backend.Controllers
             string usuarioId,
             [FromQuery] int? limite = 20)
         {
+            var usuario = await _context.Usuario.FindAsync(usuarioId);
+            if (usuario == null)
+                return NotFound(new { mensaje = "Usuario no encontrado" });
+
             var registros = await _context.RegistroPresion
                 .Where(r => r.UsuarioId == usuarioId)
                 .OrderByDescending(r => r.Fecha)
                 .Take(limite ?? 20)
                 .ToListAsync();
+
             var historial = registros.Select(r => new
             {
                 registro = new
@@ -153,8 +168,9 @@ namespace mi_tension_backend.Controllers
                     r.Fecha,
                     r.Notas
                 },
-                analisis = _analizadorPresion.Analizar(r)
+                analisis = _analizadorPresion.Analizar(r, usuario)
             }).ToList();
+
             return Ok(historial);
         }
 
@@ -166,17 +182,20 @@ namespace mi_tension_backend.Controllers
         {
             var registro = await _context.RegistroPresion.FindAsync(id);
             if (registro == null)
-            {
                 return NotFound();
-            }
-            registro.Sistolica = updateDto.Sistolica;
+
+            var usuario = await _context.Usuario.FindAsync(registro.UsuarioId);
+            if (usuario == null)
+                return NotFound(new { mensaje = "Usuario del registro no encontrado" });
+
+            registro.Sistolica  = updateDto.Sistolica;
             registro.Diastolica = updateDto.Diastolica;
-            registro.Pulso = updateDto.Pulso;
-            // FIX: convertir a UTC antes de guardar
-            registro.Fecha = updateDto.Fecha.HasValue
+            registro.Pulso      = updateDto.Pulso;
+            registro.Fecha      = updateDto.Fecha.HasValue
                 ? DateTime.SpecifyKind(updateDto.Fecha.Value, DateTimeKind.Utc)
                 : registro.Fecha;
             registro.Notas = updateDto.Notas;
+
             try
             {
                 await _context.SaveChangesAsync();
@@ -184,30 +203,23 @@ namespace mi_tension_backend.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!RegistroPresionExists(id))
-                {
                     return NotFound();
-                }
                 else
-                {
                     throw;
-                }
             }
-            var analisis = _analizadorPresion.Analizar(registro);
+
+            var analisis = _analizadorPresion.Analizar(registro, usuario);
             var response = new RegistroPresionResponseDto
             {
-                Id = registro.Id,
-                UsuarioId = registro.UsuarioId,
-                Sistolica = registro.Sistolica,
+                Id         = registro.Id,
+                UsuarioId  = registro.UsuarioId,
+                Sistolica  = registro.Sistolica,
                 Diastolica = registro.Diastolica,
-                Pulso = registro.Pulso,
-                Fecha = registro.Fecha,
-                Notas = registro.Notas
+                Pulso      = registro.Pulso,
+                Fecha      = registro.Fecha,
+                Notas      = registro.Notas
             };
-            return Ok(new
-            {
-                registro = response,
-                analisis = analisis
-            });
+            return Ok(new { registro = response, analisis });
         }
 
         /// <summary>
@@ -216,11 +228,9 @@ namespace mi_tension_backend.Controllers
         [HttpPost]
         public async Task<ActionResult<object>> PostRegistroPresion(CreateRegistroPresionDto createDto)
         {
-            var usuarioExists = await _context.Usuario.AnyAsync(u => u.Id == createDto.UsuarioId);
-            if (!usuarioExists)
-            {
+            var usuario = await _context.Usuario.FindAsync(createDto.UsuarioId);
+            if (usuario == null)
                 return BadRequest(new { message = "El usuario especificado no existe" });
-            }
 
             var fechaUtc = createDto.Fecha.HasValue
                 ? DateTime.SpecifyKind(createDto.Fecha.Value, DateTimeKind.Utc)
@@ -228,34 +238,32 @@ namespace mi_tension_backend.Controllers
 
             var registro = new RegistroPresion
             {
-                UsuarioId = createDto.UsuarioId,
-                Sistolica = createDto.Sistolica,
+                UsuarioId  = createDto.UsuarioId,
+                Sistolica  = createDto.Sistolica,
                 Diastolica = createDto.Diastolica,
-                Pulso = createDto.Pulso,
-                Fecha = fechaUtc,
-                Notas = createDto.Notas
+                Pulso      = createDto.Pulso,
+                Fecha      = fechaUtc,
+                Notas      = createDto.Notas
             };
+
             _context.RegistroPresion.Add(registro);
             await _context.SaveChangesAsync();
-            var analisis = _analizadorPresion.Analizar(registro);
+
+            var analisis = _analizadorPresion.Analizar(registro, usuario);
             var response = new RegistroPresionResponseDto
             {
-                Id = registro.Id,
-                UsuarioId = registro.UsuarioId,
-                Sistolica = registro.Sistolica,
+                Id         = registro.Id,
+                UsuarioId  = registro.UsuarioId,
+                Sistolica  = registro.Sistolica,
                 Diastolica = registro.Diastolica,
-                Pulso = registro.Pulso,
-                Fecha = registro.Fecha,
-                Notas = registro.Notas
+                Pulso      = registro.Pulso,
+                Fecha      = registro.Fecha,
+                Notas      = registro.Notas
             };
             return CreatedAtAction(
                 "GetRegistroPresion",
                 new { id = registro.Id },
-                new
-                {
-                    registro = response,
-                    analisis = analisis
-                });
+                new { registro = response, analisis });
         }
 
         /// <summary>
@@ -266,9 +274,8 @@ namespace mi_tension_backend.Controllers
         {
             var registro = await _context.RegistroPresion.FindAsync(id);
             if (registro == null)
-            {
                 return NotFound();
-            }
+
             _context.RegistroPresion.Remove(registro);
             await _context.SaveChangesAsync();
             return NoContent();
