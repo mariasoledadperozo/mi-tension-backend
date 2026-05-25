@@ -11,11 +11,10 @@ using mi_tension_backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. CONFIGURACIÓN DEL SERVIDOR (Crucial para el emulador)
+// 1. CONFIGURACIÓN DEL SERVIDOR
 builder.WebHost.ConfigureKestrel(options =>
 {
-    // Escucha en el puerto 5129 desde cualquier IP (necesario para 10.0.2.2)
-    options.ListenAnyIP(5129); 
+    options.ListenAnyIP(5129);
 });
 
 // ── Servicios propios ────────────────────────────────────────────
@@ -65,6 +64,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddIdentity<Usuario, IdentityRole>(options =>
 {
     options.SignIn.RequireConfirmedEmail = true;
+
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireDigit = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequiredLength = 6;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
@@ -114,9 +118,8 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    // NO usamos UseHttpsRedirection en desarrollo para evitar líos con el emulador
 }
-else 
+else
 {
     app.UseHttpsRedirection();
 }

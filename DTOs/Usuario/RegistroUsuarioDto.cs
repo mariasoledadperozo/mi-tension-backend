@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations;
 using mi_tension_backend.Attributes;
 using mi_tension_backend.Enums;
 
-
 namespace mi_tension_backend.DTOs.Usuario
 {
     /// <summary>
@@ -14,10 +13,6 @@ namespace mi_tension_backend.DTOs.Usuario
         [Required(ErrorMessage = "El email es obligatorio")]
         [EmailAddress(ErrorMessage = "El email no es válido")]
         public required string Email { get; set; }
-
-        [Required(ErrorMessage = "La confirmación del email es obligatoria")]
-        [Compare("Email", ErrorMessage = "Los correos electrónicos no coinciden")]
-        public required string ConfirmEmail { get; set; }
 
         [Required(ErrorMessage = "El nombre es obligatorio")]
         [MaxLength(100)]
@@ -37,10 +32,6 @@ namespace mi_tension_backend.DTOs.Usuario
         [Required(ErrorMessage = "La contraseña es obligatoria")]
         [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
         public required string Password { get; set; }
-
-        [Required(ErrorMessage = "La confirmación de la contraseña es obligatoria")]
-        [Compare("Password", ErrorMessage = "Las contraseñas no coinciden")]
-        public required string ConfirmPassword { get; set; }
 
         public bool? TomaMedicacion { get; set; }
     }

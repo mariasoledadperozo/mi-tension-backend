@@ -9,9 +9,6 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace mi_tension_backend.Controllers
 {
-    /// <summary>
-    /// Controlador para la gestión de registros de presión arterial y su análisis.
-    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -28,70 +25,6 @@ namespace mi_tension_backend.Controllers
             _analizadorPresion = analizadorPresion;
         }
 
-        /// <summary>
-        /// Obtiene todos los registros de presión almacenados.
-        /// </summary>
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<RegistroPresionResponseDto>>> GetRegistroPresion()
-        {
-            var registros = await _context.RegistroPresion.ToListAsync();
-            var response = registros.Select(r => new RegistroPresionResponseDto
-            {
-                Id         = r.Id,
-                UsuarioId  = r.UsuarioId,
-                Sistolica  = r.Sistolica,
-                Diastolica = r.Diastolica,
-                Pulso      = r.Pulso,
-                Fecha      = r.Fecha,
-                Notas      = r.Notas
-            });
-            return Ok(response);
-        }
-
-        /// <summary>
-        /// Obtiene un registro de presión específico por su ID.
-        /// </summary>
-        [HttpGet("{id}")]
-        public async Task<ActionResult<RegistroPresionResponseDto>> GetRegistroPresion(int id)
-        {
-            var registro = await _context.RegistroPresion.FindAsync(id);
-            if (registro == null)
-                return NotFound();
-
-            var response = new RegistroPresionResponseDto
-            {
-                Id         = registro.Id,
-                UsuarioId  = registro.UsuarioId,
-                Sistolica  = registro.Sistolica,
-                Diastolica = registro.Diastolica,
-                Pulso      = registro.Pulso,
-                Fecha      = registro.Fecha,
-                Notas      = registro.Notas
-            };
-            return Ok(response);
-        }
-
-        /// <summary>
-        /// Realiza un análisis médico simplificado de un registro específico.
-        /// </summary>
-        [HttpGet("{id}/analisis")]
-        public async Task<ActionResult<ClasificacionPresion>> GetAnalisisRegistro(int id)
-        {
-            var registro = await _context.RegistroPresion.FindAsync(id);
-            if (registro == null)
-                return NotFound(new { mensaje = "Registro no encontrado" });
-
-            var usuario = await _context.Usuario.FindAsync(registro.UsuarioId);
-            if (usuario == null)
-                return NotFound(new { mensaje = "Usuario del registro no encontrado" });
-
-            var analisis = _analizadorPresion.Analizar(registro, usuario);
-            return Ok(analisis);
-        }
-
-        /// <summary>
-        /// Obtiene el historial de registros de un usuario.
-        /// </summary>
         [HttpGet("usuario/{usuarioId}")]
         public async Task<ActionResult<IEnumerable<RegistroPresionResponseDto>>> GetRegistrosPorUsuario(string usuarioId)
         {
@@ -113,15 +46,14 @@ namespace mi_tension_backend.Controllers
             return Ok(response);
         }
 
-        /// <summary>
-        /// Obtiene estadísticas generales del usuario en un periodo de tiempo.
-        /// </summary>
         [HttpGet("usuario/{usuarioId}/estadisticas")]
         public async Task<ActionResult<EstadisticasPresion>> GetEstadisticasUsuario(
             string usuarioId,
             [FromQuery] int? dias = 30)
         {
-            var usuario = await _context.Usuario.FindAsync(usuarioId);
+            var usuario = await _context.Usuario
+                .Include(u => u.RegistrosPresion)
+                .FirstOrDefaultAsync(u => u.Id == usuarioId);
             if (usuario == null)
                 return NotFound(new { mensaje = "Usuario no encontrado" });
 
@@ -139,15 +71,14 @@ namespace mi_tension_backend.Controllers
             return Ok(estadisticas);
         }
 
-        /// <summary>
-        /// Obtiene el historial de registros detallado incluyendo el análisis automático de cada uno.
-        /// </summary>
         [HttpGet("usuario/{usuarioId}/historial-con-analisis")]
         public async Task<ActionResult<IEnumerable<object>>> GetHistorialConAnalisis(
             string usuarioId,
             [FromQuery] int? limite = 20)
         {
-            var usuario = await _context.Usuario.FindAsync(usuarioId);
+            var usuario = await _context.Usuario
+                .Include(u => u.RegistrosPresion)
+                .FirstOrDefaultAsync(u => u.Id == usuarioId);
             if (usuario == null)
                 return NotFound(new { mensaje = "Usuario no encontrado" });
 
@@ -174,9 +105,6 @@ namespace mi_tension_backend.Controllers
             return Ok(historial);
         }
 
-        /// <summary>
-        /// Actualiza un registro de presión existente y devuelve su nuevo análisis.
-        /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> PutRegistroPresion(int id, UpdateRegistroPresionDto updateDto)
         {
@@ -184,7 +112,9 @@ namespace mi_tension_backend.Controllers
             if (registro == null)
                 return NotFound();
 
-            var usuario = await _context.Usuario.FindAsync(registro.UsuarioId);
+            var usuario = await _context.Usuario
+                .Include(u => u.RegistrosPresion)
+                .FirstOrDefaultAsync(u => u.Id == registro.UsuarioId);
             if (usuario == null)
                 return NotFound(new { mensaje = "Usuario del registro no encontrado" });
 
@@ -222,13 +152,12 @@ namespace mi_tension_backend.Controllers
             return Ok(new { registro = response, analisis });
         }
 
-        /// <summary>
-        /// Crea un nuevo registro de presión y realiza el análisis automático.
-        /// </summary>
         [HttpPost]
         public async Task<ActionResult<object>> PostRegistroPresion(CreateRegistroPresionDto createDto)
         {
-            var usuario = await _context.Usuario.FindAsync(createDto.UsuarioId);
+            var usuario = await _context.Usuario
+                .Include(u => u.RegistrosPresion)
+                .FirstOrDefaultAsync(u => u.Id == createDto.UsuarioId);
             if (usuario == null)
                 return BadRequest(new { message = "El usuario especificado no existe" });
 
@@ -260,15 +189,9 @@ namespace mi_tension_backend.Controllers
                 Fecha      = registro.Fecha,
                 Notas      = registro.Notas
             };
-            return CreatedAtAction(
-                "GetRegistroPresion",
-                new { id = registro.Id },
-                new { registro = response, analisis });
+            return Ok(new { registro = response, analisis });
         }
 
-        /// <summary>
-        /// Elimina un registro de presión del sistema.
-        /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRegistroPresion(int id)
         {

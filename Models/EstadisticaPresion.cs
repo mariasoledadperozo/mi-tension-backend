@@ -11,12 +11,4 @@
         public int RegistrosMuyAltos  { get; set; }
 
         public ClasificacionPresion? UltimaClasificacion { get; set; }
-
-        public double PorcentajeNormales => TotalRegistros > 0
-            ? Math.Round((double)RegistrosNormales / TotalRegistros * 100, 1)
-            : 0;
-
-        public double PorcentajePreocupantes => TotalRegistros > 0
-            ? Math.Round((double)(RegistrosAltos + RegistrosMuyAltos) / TotalRegistros * 100, 1)
-            : 0;
     }

@@ -38,20 +38,19 @@ namespace mi_tension_backend.Services
             if (sistolica >= umbrales.CrisisSistolica || diastolica >= umbrales.CrisisDiastolica)
             {
                 string mensajeCrisis = tomaMedicacion
-                    ? "¡ATENCIÓN! Su presión está en nivel de crisis a pesar de la medicación. " +
-                      "Llame a emergencias o acuda a urgencias de inmediato."
-                    : "¡ATENCIÓN! Su presión está en un nivel de riesgo. " +
+                    ? "Sus valores indican una presión arterial muy alta a pesar de la medicación. " +
+                      "Se recomienda buscar atención médica lo antes posible."
+                    : "Sus valores indican una presión arterial muy alta. " +
                       "Busque atención médica de inmediato.";
 
                 if (edad >= 65)
-                    mensajeCrisis += " En personas mayores este nivel puede provocar complicaciones graves muy rápidamente.";
+                    mensajeCrisis += " En personas mayores es importante actuar rápidamente para evitar posibles complicaciones.";
 
                 return new ClasificacionPresion
                 {
                     Categoria              = CategoriaPresion.MuyAlta,
-                    Descripcion            = "Presión muy alta",
+                    Descripcion            = "muy alta",
                     Mensaje                = mensajeCrisis,
-                    Color                  = "#D32F2F",
                     RequiereAtencionMedica = true,
                     Sistolica              = sistolica,
                     Diastolica             = diastolica
@@ -62,24 +61,25 @@ namespace mi_tension_backend.Services
             if (sistolica >= umbrales.AltaSistolica || diastolica >= umbrales.AltaDiastolica)
             {
                 string mensajeAlta = tomaMedicacion
-                    ? "Su presión está alta a pesar de tomar medicación. " +
-                      "Coméntelo con su médico: puede que sea necesario ajustar el tratamiento."
-                    : "Su presión está por encima de lo normal. Consulte con su médico.";
+                    ? "Su presión arterial se encuentra alta a pesar de la medicación. " +
+                      "Consulte estos valores con su médico."
+                    : "Su presión arterial está por encima de lo recomendado. " +
+                      "Es recomendable realizar un seguimiento médico.";
 
                 if (esMujer && edad >= 50)
-                    {
-                            mensajeAlta += " En mujeres posmenopáusicas es especialmente importante controlar la tensión con regularidad.";
-                    }
-                    else if (!esMujer && edad >= 50)
-                    {
-                            mensajeAlta += " A partir de los 50 años el riesgo cardiovascular aumenta, por lo que es importante controlar la presión regularmente.";
-                    }
+                {
+                    mensajeAlta += " En esta etapa es especialmente importante mantener un control regular de la tensión arterial.";
+                }
+                else if (!esMujer && edad >= 50)
+                {
+                    mensajeAlta += " A partir de cierta edad es importante controlar la presión arterial con regularidad.";
+                }
+
                 return new ClasificacionPresion
                 {
                     Categoria              = CategoriaPresion.Alta,
-                    Descripcion            = "Presión alta",
+                    Descripcion            = "alta",
                     Mensaje                = mensajeAlta,
-                    Color                  = "#F57C00",
                     RequiereAtencionMedica = true,
                     Sistolica              = sistolica,
                     Diastolica             = diastolica
@@ -89,22 +89,21 @@ namespace mi_tension_backend.Services
             // ── Presión elevada / prehipertensión ───────────────────────────
             if (sistolica >= umbrales.ElevadaSistolica || diastolica >= umbrales.ElevadaDiastolica)
             {
-                string mensajeElevada = "Su presión está algo elevada. " +
-                    "Intente reducir el estrés, la sal y haga ejercicio regular.";
+                string mensajeElevada = "Sus valores se encuentran ligeramente elevados. " +
+                    "Intente descansar, reducir el estrés y mantener hábitos saludables.";
 
                 if (tomaMedicacion)
-                    mensajeElevada += " Aun con medicación sus valores están algo altos: Comentelo con su médico.";
+                    mensajeElevada += " Si estos valores se repiten con frecuencia, consulte con su médico.";
 
                 if (edad < 18)
-                    mensajeElevada = "Su presión está algo elevada para su edad. " +
-                        "Coméntelo con su médico.";
+                    mensajeElevada = "Sus valores se encuentran algo elevados para su edad. " +
+                        "Se recomienda comentarlo con un profesional de salud.";
 
                 return new ClasificacionPresion
                 {
                     Categoria              = CategoriaPresion.Bien,
-                    Descripcion            = "Presión un poco elevada",
+                    Descripcion            = "ligeramente elevada",
                     Mensaje                = mensajeElevada,
-                    Color                  = "#FDD835",
                     RequiereAtencionMedica = false,
                     Sistolica              = sistolica,
                     Diastolica             = diastolica
@@ -113,18 +112,17 @@ namespace mi_tension_backend.Services
 
             // ── Normal ──────────────────────────────────────────────────────
             string mensajeNormal = tomaMedicacion
-                ? "¡Muy bien! Su presión está controlada. La medicación está funcionando correctamente."
-                : "¡Muy bien! Su presión arterial está en un rango saludable.";
+                ? "Su presión arterial se encuentra estable y dentro de un rango adecuado."
+                : "Su presión arterial se encuentra dentro de un rango saludable.";
 
             if (edad >= 65 && !tomaMedicacion)
-                mensajeNormal += " Siga controlándola periódicamente, ya que la presión puede aumentar con la edad.";
+                mensajeNormal += " Mantenga un control periódico para seguir monitoreando sus valores.";
 
             return new ClasificacionPresion
             {
                 Categoria              = CategoriaPresion.Normal,
-                Descripcion            = "Presión normal",
+                Descripcion            = "normal",
                 Mensaje                = mensajeNormal,
-                Color                  = "#4CAF50",
                 RequiereAtencionMedica = false,
                 Sistolica              = sistolica,
                 Diastolica             = diastolica
@@ -174,124 +172,115 @@ namespace mi_tension_backend.Services
         {
             var hoy  = DateOnly.FromDateTime(DateTime.UtcNow);
             int edad = hoy.Year - fechaNacimiento.Year;
+
             if (fechaNacimiento.AddYears(edad) > hoy)
                 edad--;
+
             return edad;
         }
 
-/// <summary>
-/// Calcula los umbrales de presión arterial personalizados para un usuario.
-/// 
-/// La lógica incluye:
-/// - Umbrales base según edad, sexo y medicación
-/// - Ajuste dinámico según la tendencia de los últimos 7 días
-/// - Incremento de sensibilidad si hay al menos 5 registros recientes
-/// </summary>
-private static UmbralesPresion ObtenerUmbrales(Usuario usuario)
-{
-    int edad = CalcularEdad(usuario.FechaNacimiento);
-    bool esMujer = usuario.Sexo == Sexo.Femenino;
-    bool tomaMed = usuario.TomaMedicacion ?? false;
+        /// <summary>
+        /// Calcula los umbrales de presión arterial personalizados para un usuario.
+        /// </summary>
+        private static UmbralesPresion ObtenerUmbrales(Usuario usuario)
+        {
+            int edad       = CalcularEdad(usuario.FechaNacimiento);
+            bool esMujer   = usuario.Sexo == Sexo.Femenino;
+            bool tomaMed   = usuario.TomaMedicacion ?? false;
 
-    var umbralBase = ObtenerUmbralesBase(edad, esMujer, tomaMed);
+            var umbralBase = ObtenerUmbralesBase(edad, esMujer, tomaMed);
 
-    var recientes = usuario.RegistrosPresion?
-    .Where(r => r.Fecha >= DateTime.UtcNow.AddDays(-7))
-    .ToList() ?? new List<RegistroPresion>();
+            var recientes = usuario.RegistrosPresion?
+                .Where(r => r.Fecha >= DateTime.UtcNow.AddDays(-7))
+                .ToList() ?? new List<RegistroPresion>();
 
-    if (recientes.Count >= 5)
-    {
-        var mediaSis = recientes.Average(r => r.Sistolica);
-        var mediaDia = recientes.Average(r => r.Diastolica);
+            if (recientes.Count >= 5)
+            {
+                var mediaSis = recientes.Average(r => r.Sistolica);
+                var mediaDia = recientes.Average(r => r.Diastolica);
 
-        return AjustarPorTendencia(umbralBase, mediaSis, mediaDia);
+                return AjustarPorTendencia(umbralBase, mediaSis, mediaDia);
+            }
+
+            return umbralBase;
+        }
+
+        /// <summary>
+        /// Genera los umbrales base según edad, sexo y uso de medicación.
+        /// </summary>
+        private static UmbralesPresion ObtenerUmbralesBase(int edad, bool esMujer, bool tomaMed)
+        {
+            if (edad < 18)
+                return new UmbralesPresion(160, 110, 130, 85, 115, 75);
+
+            int crisisSis = 180;
+            int crisisDia = 120;
+
+            int altaSis = 140;
+            int altaDia = 90;
+
+            int elevadaSis = esMujer ? 118 : 120;
+            int elevadaDia = esMujer ? 78 : 80;
+
+            if (edad >= 65)
+            {
+                altaSis = 150;
+                elevadaSis = 130;
+            }
+
+            if (tomaMed)
+            {
+                altaSis -= 5;
+                altaDia -= 5;
+
+                elevadaSis -= 3;
+                elevadaDia -= 3;
+            }
+
+            return new UmbralesPresion(
+                crisisSis,
+                crisisDia,
+                altaSis,
+                altaDia,
+                elevadaSis,
+                elevadaDia
+            );
+        }
+
+        /// <summary>
+        /// Ajusta los umbrales en función de la tendencia reciente del usuario.
+        /// </summary>
+        private static UmbralesPresion AjustarPorTendencia(
+            UmbralesPresion baseUmbral,
+            double mediaSis,
+            double mediaDia)
+        {
+            int ajusteSis = 0;
+            int ajusteDia = 0;
+
+            if (mediaSis >= baseUmbral.ElevadaSistolica)
+                ajusteSis -= 5;
+
+            if (mediaDia >= baseUmbral.ElevadaDiastolica)
+                ajusteDia -= 5;
+
+            if (mediaSis >= baseUmbral.AltaSistolica)
+                ajusteSis -= 5;
+
+            if (mediaDia >= baseUmbral.AltaDiastolica)
+                ajusteDia -= 5;
+
+            ajusteSis = Math.Max(ajusteSis, -10);
+            ajusteDia = Math.Max(ajusteDia, -10);
+
+            return new UmbralesPresion(
+                baseUmbral.CrisisSistolica,
+                baseUmbral.CrisisDiastolica,
+                baseUmbral.AltaSistolica + ajusteSis,
+                baseUmbral.AltaDiastolica + ajusteDia,
+                baseUmbral.ElevadaSistolica + ajusteSis,
+                baseUmbral.ElevadaDiastolica + ajusteDia
+            );
+        }
     }
-
-    return umbralBase;
-}
-
-/// <summary>
-/// Genera los umbrales base según edad, sexo y uso de medicación.
-/// </summary>
-private static UmbralesPresion ObtenerUmbralesBase(int edad, bool esMujer, bool tomaMed)
-{
-    if (edad < 18)
-        return new UmbralesPresion(160, 110, 130, 85, 115, 75);
-
-    int crisisSis = 180;
-    int crisisDia = 120;
-
-    int altaSis = 140;
-    int altaDia = 90;
-
-    int elevadaSis = esMujer ? 118 : 120;
-    int elevadaDia = esMujer ? 78 : 80;
-
-    if (edad >= 65)
-    {
-        altaSis = 150;
-        elevadaSis = 130;
-    }
-
-    if (tomaMed)
-    {
-        altaSis -= 5;
-        altaDia -= 5;
-
-        elevadaSis -= 3;
-        elevadaDia -= 3;
-    }
-
-    return new UmbralesPresion(
-        crisisSis,
-        crisisDia,
-        altaSis,
-        altaDia,
-        elevadaSis,
-        elevadaDia
-    );
-}
-
-/// <summary>
-/// Ajusta los umbrales en función de la tendencia reciente del usuario.
-/// 
-/// Si la media de los últimos registros supera los niveles elevados o altos,
-/// se reduce el umbral para aumentar la sensibilidad del sistema.
-/// </summary>
-private static UmbralesPresion AjustarPorTendencia(
-    UmbralesPresion baseUmbral,
-    double mediaSis,
-    double mediaDia)
-{
-    int ajusteSis = 0;
-    int ajusteDia = 0;
-
-    if (mediaSis >= baseUmbral.ElevadaSistolica)
-        ajusteSis -= 5;
-
-    if (mediaDia >= baseUmbral.ElevadaDiastolica)
-        ajusteDia -= 5;
-
-    if (mediaSis >= baseUmbral.AltaSistolica)
-        ajusteSis -= 5;
-
-    if (mediaDia >= baseUmbral.AltaDiastolica)
-        ajusteDia -= 5;
-
-    // Limitar ajuste máximo
-    ajusteSis = Math.Max(ajusteSis, -10);
-    ajusteDia = Math.Max(ajusteDia, -10);
-
-    return new UmbralesPresion(
-        baseUmbral.CrisisSistolica,
-        baseUmbral.CrisisDiastolica,
-        baseUmbral.AltaSistolica + ajusteSis,
-        baseUmbral.AltaDiastolica + ajusteDia,
-        baseUmbral.ElevadaSistolica + ajusteSis,
-        baseUmbral.ElevadaDiastolica + ajusteDia
-    );
-}
-
-    }
-
 }

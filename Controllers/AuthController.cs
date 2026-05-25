@@ -94,7 +94,11 @@ namespace mi_tension_backend.Controllers
             }
             catch (Exception emailEx)
             {
-                Console.WriteLine($"[AuthController] ERROR al enviar email: {emailEx.Message}");
+               
+    Console.WriteLine($"[AuthController] ERROR al enviar email: {emailEx.Message}");
+    Console.WriteLine($"[AuthController] StackTrace: {emailEx.StackTrace}");
+    if (emailEx.InnerException != null)
+        Console.WriteLine($"[AuthController] InnerException: {emailEx.InnerException.Message}");
             }
 
             return Ok(new { 

@@ -1,9 +1,7 @@
 // Author: María Soledad Perozo
-using SendGrid;
-using SendGrid.Helpers.Mail;
-using Microsoft.Extensions.Options;
-using System.Threading.Tasks;
 using System.Net;
+using System.Net.Mail;
+using Microsoft.Extensions.Options;
 
 namespace mi_tension_backend.Services
 {
@@ -23,23 +21,24 @@ namespace mi_tension_backend.Services
 
         public async Task SendEmailAsync(string to, string subject, string htmlBody)
         {
-            var client = new SendGridClient(_emailSettings.Password);
-            var from = new EmailAddress(_emailSettings.FromEmail, _emailSettings.FromName);
-            var toEmail = new EmailAddress(to);
-            var msg = MailHelper.CreateSingleEmail(from, toEmail, subject, plainTextContent: null, htmlContent: htmlBody);
-
-            var response = await client.SendEmailAsync(msg);
-            var responseBody = await response.Body.ReadAsStringAsync();
-
-            Console.WriteLine($"[SendGrid] Status: {response.StatusCode}");
-            Console.WriteLine($"[SendGrid] Body: {responseBody}");
-
-            if (response.StatusCode != HttpStatusCode.OK && response.StatusCode != HttpStatusCode.Accepted)
+            var smtp = new SmtpClient("smtp.gmail.com")
             {
-                throw new Exception($"SendGrid error {response.StatusCode}: {responseBody}");
-            }
+                Port = 587,
+                Credentials = new NetworkCredential(_emailSettings.FromEmail, _emailSettings.Password),
+                EnableSsl = true,
+            };
 
-            Console.WriteLine($"[EmailService] Correo enviado exitosamente a {to}");
+            var mail = new MailMessage
+            {
+                From = new MailAddress(_emailSettings.FromEmail, _emailSettings.FromName),
+                Subject = subject,
+                Body = htmlBody,
+                IsBodyHtml = true,
+            };
+
+            mail.To.Add(to);
+            await smtp.SendMailAsync(mail);
+            Console.WriteLine($"[EmailService] Email enviado a {to}");
         }
     }
 }

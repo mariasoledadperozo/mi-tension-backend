@@ -60,3 +60,7 @@ actualizar-gitignore.ps1
 actualizar-gitignore-todas-ramas.ps1
 organizar-dtos.ps1
 mi_script.ps1
+bin/
+obj/
+*.user
+*.suo
