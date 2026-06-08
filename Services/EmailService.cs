@@ -21,12 +21,12 @@ namespace mi_tension_backend.Services
 
         public async Task SendEmailAsync(string to, string subject, string htmlBody)
         {
-            var smtp = new SmtpClient("smtp.gmail.com")
-            {
-                Port = 587,
-                Credentials = new NetworkCredential(_emailSettings.FromEmail, _emailSettings.Password),
-                EnableSsl = true,
-            };
+            var smtp = new SmtpClient(_emailSettings.Host)
+{
+    Port = _emailSettings.Port,
+    Credentials = new NetworkCredential(_emailSettings.FromEmail, _emailSettings.Password),
+    EnableSsl = _emailSettings.UseSsl,
+};
 
             var mail = new MailMessage
             {

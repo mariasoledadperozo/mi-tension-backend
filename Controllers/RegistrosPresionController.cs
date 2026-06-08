@@ -152,45 +152,63 @@ namespace mi_tension_backend.Controllers
             return Ok(new { registro = response, analisis });
         }
 
-        [HttpPost]
-        public async Task<ActionResult<object>> PostRegistroPresion(CreateRegistroPresionDto createDto)
+      [HttpPost]
+public async Task<ActionResult<object>> PostRegistroPresion(CreateRegistroPresionDto createDto)
+{
+    var usuario = await _context.Usuario
+        .Include(u => u.RegistrosPresion)
+        .FirstOrDefaultAsync(u => u.Id == createDto.UsuarioId);
+    if (usuario == null)
+        return BadRequest(new { message = "El usuario especificado no existe" });
+
+    var fechaUtc = createDto.Fecha.HasValue
+        ? DateTime.SpecifyKind(createDto.Fecha.Value, DateTimeKind.Utc)
+        : DateTime.UtcNow;
+
+    var registro = new RegistroPresion
+    {
+        UsuarioId  = createDto.UsuarioId,
+        Sistolica  = createDto.Sistolica,
+        Diastolica = createDto.Diastolica,
+        Pulso      = createDto.Pulso,
+        Fecha      = fechaUtc,
+        Notas      = createDto.Notas
+    };
+
+    _context.RegistroPresion.Add(registro);
+    await _context.SaveChangesAsync();
+
+    try
+    {
+        var analisis = _analizadorPresion.Analizar(registro, usuario);
+        var response = new RegistroPresionResponseDto
         {
-            var usuario = await _context.Usuario
-                .Include(u => u.RegistrosPresion)
-                .FirstOrDefaultAsync(u => u.Id == createDto.UsuarioId);
-            if (usuario == null)
-                return BadRequest(new { message = "El usuario especificado no existe" });
-
-            var fechaUtc = createDto.Fecha.HasValue
-                ? DateTime.SpecifyKind(createDto.Fecha.Value, DateTimeKind.Utc)
-                : DateTime.UtcNow;
-
-            var registro = new RegistroPresion
-            {
-                UsuarioId  = createDto.UsuarioId,
-                Sistolica  = createDto.Sistolica,
-                Diastolica = createDto.Diastolica,
-                Pulso      = createDto.Pulso,
-                Fecha      = fechaUtc,
-                Notas      = createDto.Notas
-            };
-
-            _context.RegistroPresion.Add(registro);
-            await _context.SaveChangesAsync();
-
-            var analisis = _analizadorPresion.Analizar(registro, usuario);
-            var response = new RegistroPresionResponseDto
-            {
-                Id         = registro.Id,
-                UsuarioId  = registro.UsuarioId,
-                Sistolica  = registro.Sistolica,
-                Diastolica = registro.Diastolica,
-                Pulso      = registro.Pulso,
-                Fecha      = registro.Fecha,
-                Notas      = registro.Notas
-            };
-            return Ok(new { registro = response, analisis });
-        }
+            Id         = registro.Id,
+            UsuarioId  = registro.UsuarioId,
+            Sistolica  = registro.Sistolica,
+            Diastolica = registro.Diastolica,
+            Pulso      = registro.Pulso,
+            Fecha      = registro.Fecha,
+            Notas      = registro.Notas
+        };
+        return Ok(new { registro = response, analisis });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error en análisis: {ex.Message}");
+        var response = new RegistroPresionResponseDto
+        {
+            Id         = registro.Id,
+            UsuarioId  = registro.UsuarioId,
+            Sistolica  = registro.Sistolica,
+            Diastolica = registro.Diastolica,
+            Pulso      = registro.Pulso,
+            Fecha      = registro.Fecha,
+            Notas      = registro.Notas
+        };
+        return Ok(new { registro = response, analisis = (object?)null, error = ex.Message });
+    }
+}
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRegistroPresion(int id)
