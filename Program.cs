@@ -111,6 +111,8 @@ builder.Services.AddCors(options =>
     });
 });
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var app = builder.Build();
 
 // 2. CONFIGURACIÓN DEL PIPELINE ───────────────────────────────────
