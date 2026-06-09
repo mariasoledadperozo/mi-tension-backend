@@ -49,7 +49,7 @@ namespace mi_tension_backend.Services
                 return new ClasificacionPresion
                 {
                     Categoria              = CategoriaPresion.MuyAlta,
-                    Descripcion            = "muy alta",
+                    Descripcion            = "Muy alta",
                     Mensaje                = mensajeCrisis,
                     RequiereAtencionMedica = true,
                     Sistolica              = sistolica,
@@ -78,7 +78,7 @@ namespace mi_tension_backend.Services
                 return new ClasificacionPresion
                 {
                     Categoria              = CategoriaPresion.Alta,
-                    Descripcion            = "alta",
+                    Descripcion            = "Alta",
                     Mensaje                = mensajeAlta,
                     RequiereAtencionMedica = true,
                     Sistolica              = sistolica,
@@ -102,7 +102,7 @@ namespace mi_tension_backend.Services
                 return new ClasificacionPresion
                 {
                     Categoria              = CategoriaPresion.Bien,
-                    Descripcion            = "ligeramente elevada",
+                    Descripcion            = "Ligeramente elevada",
                     Mensaje                = mensajeElevada,
                     RequiereAtencionMedica = false,
                     Sistolica              = sistolica,
@@ -121,7 +121,7 @@ namespace mi_tension_backend.Services
             return new ClasificacionPresion
             {
                 Categoria              = CategoriaPresion.Normal,
-                Descripcion            = "normal",
+                Descripcion            = "Normal",
                 Mensaje                = mensajeNormal,
                 RequiereAtencionMedica = false,
                 Sistolica              = sistolica,
