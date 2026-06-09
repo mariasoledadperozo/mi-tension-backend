@@ -8,6 +8,7 @@ using System.Text;
 using mi_tension_backend.Models;
 using mi_tension_backend.Data;
 using mi_tension_backend.Services;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,20 @@ builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Emai
 builder.Services.AddTransient<IEmailService, EmailService>();
 
 builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(e => e.Value?.Errors.Count > 0)
+                .Select(e => new { Field = e.Key, Errors = e.Value!.Errors.Select(x => x.ErrorMessage) });
+
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogError("Validation errors: {Errors}", System.Text.Json.JsonSerializer.Serialize(errors));
+
+            return new BadRequestObjectResult(new { errors });
+        };
+    })
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
