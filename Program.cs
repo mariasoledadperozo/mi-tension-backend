@@ -11,12 +11,6 @@ using mi_tension_backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. CONFIGURACIÓN DEL SERVIDOR
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ListenAnyIP(5129);
-});
-
 // ── Servicios propios ────────────────────────────────────────────
 builder.Services.AddScoped<AnalizadorPresionService>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
