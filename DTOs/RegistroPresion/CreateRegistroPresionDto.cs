@@ -13,8 +13,6 @@ public class CreateRegistroPresionDto
     public int Sistolica { get; set; }
     public int Diastolica { get; set; }
     public int Pulso { get; set; }
-
-    [NoFutureDate(ErrorMessage = "La fecha de la toma no puede ser futura")]
     public DateTime? Fecha { get; set; }
     public string? Notas { get; set; }
 }
