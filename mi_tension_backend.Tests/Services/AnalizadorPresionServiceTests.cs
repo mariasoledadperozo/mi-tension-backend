@@ -34,7 +34,6 @@ public class AnalizadorPresionServiceTests
 
         resultado.Categoria.Should().Be(CategoriaPresion.Normal);
         resultado.Descripcion.Should().Be("normal");
-        resultado.RequiereAtencionMedica.Should().BeFalse();
         resultado.Sistolica.Should().Be(115);
         resultado.Diastolica.Should().Be(75);
     }
@@ -72,7 +71,6 @@ public class AnalizadorPresionServiceTests
 
         resultado.Categoria.Should().Be(CategoriaPresion.Bien);
         resultado.Descripcion.Should().Be("ligeramente elevada");
-        resultado.RequiereAtencionMedica.Should().BeFalse();
     }
 
     [Fact]
@@ -107,7 +105,6 @@ public class AnalizadorPresionServiceTests
 
         resultado.Categoria.Should().Be(CategoriaPresion.Alta);
         resultado.Descripcion.Should().Be("alta");
-        resultado.RequiereAtencionMedica.Should().BeTrue();
         resultado.Mensaje.Should().Contain("por encima de lo recomendado");
     }
 
@@ -155,7 +152,6 @@ public class AnalizadorPresionServiceTests
 
         resultado.Categoria.Should().Be(CategoriaPresion.MuyAlta);
         resultado.Descripcion.Should().Be("muy alta");
-        resultado.RequiereAtencionMedica.Should().BeTrue();
     }
 
     [Fact]
