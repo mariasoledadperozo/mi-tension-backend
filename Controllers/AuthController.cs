@@ -79,28 +79,21 @@ namespace mi_tension_backend.Controllers
 
             Console.WriteLine($"[AuthController] Usuario creado. Código de verificación generado: {codigo}");
 
-            var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ConfirmEmailTemplate.html");
-            var htmlBody = await System.IO.File.ReadAllTextAsync(templatePath);    
+         try
+{
+    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ConfirmEmailTemplate.html");
+    var htmlBody = await System.IO.File.ReadAllTextAsync(templatePath);
+    htmlBody = htmlBody.Replace("{{NOMBRE}}", usuario.Nombre);
+    htmlBody = htmlBody.Replace("{{CODIGO}}", codigo);
 
-            htmlBody = htmlBody.Replace("{{NOMBRE}}", usuario.Nombre);
-            htmlBody = htmlBody.Replace("{{CODIGO}}", codigo);
-
-            Console.WriteLine("[AuthController] Template leído. Enviando email con código...");
-
-            try
-            {
-                await _emailService.SendEmailAsync(dto.Email, "Tu código de verificación - Mi Tensión", htmlBody);
-                Console.WriteLine("[AuthController] Email enviado correctamente.");
-            }
-            catch (Exception emailEx)
-            {
-               
+    await _emailService.SendEmailAsync(dto.Email, "Tu código de verificación - Mi Tensión", htmlBody);
+    Console.WriteLine("[AuthController] Email enviado correctamente.");
+}
+catch (Exception emailEx)
+{
     Console.WriteLine($"[AuthController] ERROR al enviar email: {emailEx.Message}");
-    Console.WriteLine($"[AuthController] StackTrace: {emailEx.StackTrace}");
-    if (emailEx.InnerException != null)
-        Console.WriteLine($"[AuthController] InnerException: {emailEx.InnerException.Message}");
-            }
-
+    Console.WriteLine($"[AuthController] InnerException: {emailEx.InnerException?.Message}");
+}
             return Ok(new { 
                 mensaje = "Registro exitoso. Revisa tu correo para obtener el código de verificación.",
                 email = dto.Email 
