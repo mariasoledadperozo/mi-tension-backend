@@ -4,28 +4,13 @@ using mi_tension_backend.Models;
 
 namespace mi_tension_backend.Services
 {
-    /// <summary>
-    /// Servicio para analizar la presión arterial según estándares médicos,
-    /// personalizado por edad, sexo y medicación del usuario.
-    /// </summary>
     public class AnalizadorPresionService
     {
-        // ─────────────────────────────────────────────────────────────────────
-        // Métodos públicos
-        // ─────────────────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Analiza un registro de presión con contexto del usuario.
-        /// Ajusta umbrales y mensajes según edad, sexo y medicación.
-        /// </summary>
         public ClasificacionPresion Analizar(RegistroPresion registro, Usuario usuario)
         {
             return Analizar(registro.Sistolica, registro.Diastolica, usuario);
         }
 
-        /// <summary>
-        /// Analiza valores de presión arterial sistólica y diastólica con contexto del usuario.
-        /// </summary>
         public ClasificacionPresion Analizar(int sistolica, int diastolica, Usuario usuario)
         {
             int edad            = CalcularEdad(usuario.FechaNacimiento);
@@ -48,12 +33,11 @@ namespace mi_tension_backend.Services
 
                 return new ClasificacionPresion
                 {
-                    Categoria              = CategoriaPresion.MuyAlta,
-                    Descripcion            = "Muy alta",
-                    Mensaje                = mensajeCrisis,
-                    RequiereAtencionMedica = true,
-                    Sistolica              = sistolica,
-                    Diastolica             = diastolica
+                    Categoria   = CategoriaPresion.MuyAlta,
+                    Descripcion = "Muy alta",
+                    Mensaje     = mensajeCrisis,
+                    Sistolica   = sistolica,
+                    Diastolica  = diastolica
                 };
             }
 
@@ -67,22 +51,17 @@ namespace mi_tension_backend.Services
                       "Es recomendable realizar un seguimiento médico.";
 
                 if (esMujer && edad >= 50)
-                {
                     mensajeAlta += " En esta etapa es especialmente importante mantener un control regular de la tensión arterial.";
-                }
                 else if (!esMujer && edad >= 50)
-                {
                     mensajeAlta += " A partir de cierta edad es importante controlar la presión arterial con regularidad.";
-                }
 
                 return new ClasificacionPresion
                 {
-                    Categoria              = CategoriaPresion.Alta,
-                    Descripcion            = "Alta",
-                    Mensaje                = mensajeAlta,
-                    RequiereAtencionMedica = true,
-                    Sistolica              = sistolica,
-                    Diastolica             = diastolica
+                    Categoria   = CategoriaPresion.Alta,
+                    Descripcion = "Alta",
+                    Mensaje     = mensajeAlta,
+                    Sistolica   = sistolica,
+                    Diastolica  = diastolica
                 };
             }
 
@@ -101,12 +80,11 @@ namespace mi_tension_backend.Services
 
                 return new ClasificacionPresion
                 {
-                    Categoria              = CategoriaPresion.Bien,
-                    Descripcion            = "Ligeramente elevada",
-                    Mensaje                = mensajeElevada,
-                    RequiereAtencionMedica = false,
-                    Sistolica              = sistolica,
-                    Diastolica             = diastolica
+                    Categoria   = CategoriaPresion.Bien,
+                    Descripcion = "Ligeramente elevada",
+                    Mensaje     = mensajeElevada,
+                    Sistolica   = sistolica,
+                    Diastolica  = diastolica
                 };
             }
 
@@ -120,18 +98,14 @@ namespace mi_tension_backend.Services
 
             return new ClasificacionPresion
             {
-                Categoria              = CategoriaPresion.Normal,
-                Descripcion            = "Normal",
-                Mensaje                = mensajeNormal,
-                RequiereAtencionMedica = false,
-                Sistolica              = sistolica,
-                Diastolica             = diastolica
+                Categoria   = CategoriaPresion.Normal,
+                Descripcion = "Normal",
+                Mensaje     = mensajeNormal,
+                Sistolica   = sistolica,
+                Diastolica  = diastolica
             };
         }
 
-        /// <summary>
-        /// Obtiene estadísticas agregadas de los registros del usuario.
-        /// </summary>
         public EstadisticasPresion ObtenerEstadisticas(IEnumerable<RegistroPresion> registros, Usuario usuario)
         {
             var lista = registros.ToList();
@@ -151,23 +125,14 @@ namespace mi_tension_backend.Services
                 PromedioPulso       = lista.Any(r => r.Pulso > 0)
                                         ? (int)lista.Where(r => r.Pulso > 0).Average(r => r.Pulso)
                                         : 0,
-
                 RegistrosNormales   = clasificaciones.Count(c => c.Categoria == CategoriaPresion.Normal),
                 RegistrosBien       = clasificaciones.Count(c => c.Categoria == CategoriaPresion.Bien),
                 RegistrosAltos      = clasificaciones.Count(c => c.Categoria == CategoriaPresion.Alta),
                 RegistrosMuyAltos   = clasificaciones.Count(c => c.Categoria == CategoriaPresion.MuyAlta),
-
                 UltimaClasificacion = clasificaciones.LastOrDefault()
             };
         }
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Helpers privados
-        // ─────────────────────────────────────────────────────────────────────
-
-        /// <summary>
-        /// Calcula la edad en años completos a partir de la fecha de nacimiento.
-        /// </summary>
         private static int CalcularEdad(DateOnly fechaNacimiento)
         {
             var hoy  = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -179,14 +144,11 @@ namespace mi_tension_backend.Services
             return edad;
         }
 
-        /// <summary>
-        /// Calcula los umbrales de presión arterial personalizados para un usuario.
-        /// </summary>
         private static UmbralesPresion ObtenerUmbrales(Usuario usuario)
         {
-            int edad       = CalcularEdad(usuario.FechaNacimiento);
-            bool esMujer   = usuario.Sexo == Sexo.Femenino;
-            bool tomaMed   = usuario.TomaMedicacion ?? false;
+            int edad     = CalcularEdad(usuario.FechaNacimiento);
+            bool esMujer = usuario.Sexo == Sexo.Femenino;
+            bool tomaMed = usuario.TomaMedicacion ?? false;
 
             var umbralBase = ObtenerUmbralesBase(edad, esMujer, tomaMed);
 
@@ -205,9 +167,6 @@ namespace mi_tension_backend.Services
             return umbralBase;
         }
 
-        /// <summary>
-        /// Genera los umbrales base según edad, sexo y uso de medicación.
-        /// </summary>
         private static UmbralesPresion ObtenerUmbralesBase(int edad, bool esMujer, bool tomaMed)
         {
             if (edad < 18)
@@ -215,41 +174,29 @@ namespace mi_tension_backend.Services
 
             int crisisSis = 180;
             int crisisDia = 120;
-
-            int altaSis = 140;
-            int altaDia = 90;
+            int altaSis   = 140;
+            int altaDia   = 90;
 
             int elevadaSis = esMujer ? 118 : 120;
-            int elevadaDia = esMujer ? 78 : 80;
+            int elevadaDia = esMujer ? 78  : 80;
 
             if (edad >= 65)
             {
-                altaSis = 150;
+                altaSis    = 150;
                 elevadaSis = 130;
             }
 
             if (tomaMed)
             {
-                altaSis -= 5;
-                altaDia -= 5;
-
+                altaSis    -= 5;
+                altaDia    -= 5;
                 elevadaSis -= 3;
                 elevadaDia -= 3;
             }
 
-            return new UmbralesPresion(
-                crisisSis,
-                crisisDia,
-                altaSis,
-                altaDia,
-                elevadaSis,
-                elevadaDia
-            );
+            return new UmbralesPresion(crisisSis, crisisDia, altaSis, altaDia, elevadaSis, elevadaDia);
         }
 
-        /// <summary>
-        /// Ajusta los umbrales en función de la tendencia reciente del usuario.
-        /// </summary>
         private static UmbralesPresion AjustarPorTendencia(
             UmbralesPresion baseUmbral,
             double mediaSis,
@@ -258,17 +205,10 @@ namespace mi_tension_backend.Services
             int ajusteSis = 0;
             int ajusteDia = 0;
 
-            if (mediaSis >= baseUmbral.ElevadaSistolica)
-                ajusteSis -= 5;
-
-            if (mediaDia >= baseUmbral.ElevadaDiastolica)
-                ajusteDia -= 5;
-
-            if (mediaSis >= baseUmbral.AltaSistolica)
-                ajusteSis -= 5;
-
-            if (mediaDia >= baseUmbral.AltaDiastolica)
-                ajusteDia -= 5;
+            if (mediaSis >= baseUmbral.ElevadaSistolica) ajusteSis -= 5;
+            if (mediaDia >= baseUmbral.ElevadaDiastolica) ajusteDia -= 5;
+            if (mediaSis >= baseUmbral.AltaSistolica)    ajusteSis -= 5;
+            if (mediaDia >= baseUmbral.AltaDiastolica)   ajusteDia -= 5;
 
             ajusteSis = Math.Max(ajusteSis, -10);
             ajusteDia = Math.Max(ajusteDia, -10);
@@ -276,7 +216,7 @@ namespace mi_tension_backend.Services
             return new UmbralesPresion(
                 baseUmbral.CrisisSistolica,
                 baseUmbral.CrisisDiastolica,
-                baseUmbral.AltaSistolica + ajusteSis,
+                baseUmbral.AltaSistolica  + ajusteSis,
                 baseUmbral.AltaDiastolica + ajusteDia,
                 baseUmbral.ElevadaSistolica + ajusteSis,
                 baseUmbral.ElevadaDiastolica + ajusteDia

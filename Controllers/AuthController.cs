@@ -138,34 +138,6 @@ namespace mi_tension_backend.Controllers
         }
 
         /// <summary>
-        /// Confirma el correo electrónico de un usuario mediante un token.
-        /// </summary>
-        /// <param name="userId">ID del usuario.</param>
-        /// <param name="token">Token de confirmación.</param>
-        /// <returns>Resultado de la confirmación.</returns>
-        [HttpGet("confirm-email")]
-        public async Task<IActionResult> ConfirmarEmail(string userId, string token)
-        {
-            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
-                return BadRequest(new { mensaje = "Enlace de confirmación inválido." });
-
-            var usuario = await _userManager.FindByIdAsync(userId);
-            if (usuario == null)
-                return NotFound(new { mensaje = "Usuario no encontrado." });
-
-            if (usuario.EmailConfirmed)
-                return Ok(new { mensaje = "El correo ya estaba confirmado. Puedes iniciar sesión." });
-
-            var tokenDecodificado = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
-            var resultado = await _userManager.ConfirmEmailAsync(usuario, tokenDecodificado);
-
-            if (!resultado.Succeeded)
-                return BadRequest(new { mensaje = "El enlace es inválido o ha expirado." });
-
-            return Ok(new { mensaje = "¡Correo verificado! Ya puedes iniciar sesión." });
-        }
-
-        /// <summary>
         /// Inicia sesión de un usuario y devuelve un token JWT.
         /// </summary>
         /// <param name="dto">Credenciales de inicio de sesión.</param>
@@ -204,39 +176,6 @@ namespace mi_tension_backend.Controllers
                 }
             });
         }
-
-        /// <summary>
-        /// Reenvía el enlace de confirmación de correo a un usuario.
-        /// </summary>
-        /// <param name="email">Correo electrónico del usuario.</param>
-        /// <returns>Mensaje genérico de confirmación.</returns>
-        [HttpPost("resend-confirmation")]
-        public async Task<IActionResult> ReenviarConfirmacion([FromBody] string email)
-        {
-            var usuario = await _userManager.FindByEmailAsync(email);
-
-            if (usuario == null || usuario.EmailConfirmed)
-                return Ok(new { mensaje = "Si el correo existe y no está confirmado, recibirás un nuevo enlace." });
-
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(usuario);
-            var tokenCodificado = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-
-            var urlConfirmacion = Url.Action(
-                "ConfirmarEmail", "Auth",
-                new { userId = usuario.Id, token = tokenCodificado },
-                Request.Scheme);
-
-            var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ConfirmEmailTemplate.html");
-            var htmlBody = await System.IO.File.ReadAllTextAsync(templatePath);    
-
-            htmlBody = htmlBody.Replace("{{NOMBRE}}", usuario.Nombre);
-            htmlBody = htmlBody.Replace("{{CONFIRM_URL}}", urlConfirmacion);
-
-            await _emailService.SendEmailAsync(email, "Nuevo enlace de verificación - Mi Tensión", htmlBody);
-
-            return Ok(new { mensaje = "Si el correo existe y no está confirmado, recibirás un nuevo enlace." });
-        }
-
         /// <summary>
         /// Genera un token JWT para un usuario autenticado.
         /// </summary>
