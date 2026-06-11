@@ -72,31 +72,32 @@ namespace mi_tension_backend.Controllers
             // Generar código de 6 dígitos
             var random = new Random();
             var codigo = random.Next(100000, 999999).ToString();
-            
+
             usuario.CodigoVerificacion = codigo;
             usuario.CodigoVerificacionExpiracion = DateTime.UtcNow.AddMinutes(15);
             await _userManager.UpdateAsync(usuario);
 
             Console.WriteLine($"[AuthController] Usuario creado. Código de verificación generado: {codigo}");
 
-         try
-{
-    var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "ConfirmEmailTemplate.html");
-    var htmlBody = await System.IO.File.ReadAllTextAsync(templatePath);
-    htmlBody = htmlBody.Replace("{{NOMBRE}}", usuario.Nombre);
-    htmlBody = htmlBody.Replace("{{CODIGO}}", codigo);
+            try
+            {
+                var templatePath = Path.Combine(AppContext.BaseDirectory, "Templates", "ConfirmEmailTemplate.html");
+                var htmlBody = await System.IO.File.ReadAllTextAsync(templatePath);
+                htmlBody = htmlBody.Replace("{{NOMBRE}}", usuario.Nombre);
+                htmlBody = htmlBody.Replace("{{CODIGO}}", codigo);
 
-    await _emailService.SendEmailAsync(dto.Email, "Tu código de verificación - Mi Tensión", htmlBody);
-    Console.WriteLine("[AuthController] Email enviado correctamente.");
-}
-catch (Exception emailEx)
-{
-    Console.WriteLine($"[AuthController] ERROR al enviar email: {emailEx.Message}");
-    Console.WriteLine($"[AuthController] InnerException: {emailEx.InnerException?.Message}");
-}
-            return Ok(new { 
+                await _emailService.SendEmailAsync(dto.Email, "Tu código de verificación - Mi Tensión", htmlBody);
+                Console.WriteLine("[AuthController] Email enviado correctamente.");
+            }
+            catch (Exception emailEx)
+            {
+                Console.WriteLine($"[AuthController] ERROR al enviar email: {emailEx.Message}");
+                Console.WriteLine($"[AuthController] InnerException: {emailEx.InnerException?.Message}");
+            }
+
+            return Ok(new {
                 mensaje = "Registro exitoso. Revisa tu correo para obtener el código de verificación.",
-                email = dto.Email 
+                email = dto.Email
             });
         }
 
@@ -169,6 +170,7 @@ catch (Exception emailEx)
                 }
             });
         }
+
         /// <summary>
         /// Genera un token JWT para un usuario autenticado.
         /// </summary>
