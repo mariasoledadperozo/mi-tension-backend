@@ -14,7 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ── Servicios propios ────────────────────────────────────────────
 builder.Services.AddScoped<AnalizadorPresionService>();
-builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
 builder.Services.AddTransient<IEmailService, EmailService>();
 
 builder.Services.AddControllers()
@@ -124,7 +124,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// 2. CONFIGURACIÓN DEL PIPELINE ───────────────────────────────────
+// ── Pipeline ─────────────────────────────────────────────────────
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
