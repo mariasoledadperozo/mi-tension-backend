@@ -14,8 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ── Servicios propios ────────────────────────────────────────────
 builder.Services.AddScoped<AnalizadorPresionService>();
-builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
-builder.Services.AddTransient<IEmailService, EmailService>();
+builder.Services.AddHttpClient<IEmailService, EmailService>();
 
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
